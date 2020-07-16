@@ -9,5 +9,5 @@ spec:
   clusterSelector:
     matchExpressions: []
     matchLabels:
-      env: "dev"
+      environment: "dev"
   clusterReplicas: 1
