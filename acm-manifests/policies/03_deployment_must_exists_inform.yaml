@@ -1,28 +1,36 @@
-apiVersion: policy.mcm.ibm.com/v1alpha1
+apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
   name: policy-deployment-inform
   namespace: policies
   annotations:
-    policy.mcm.ibm.com/standards: 
-    policy.mcm.ibm.com/categories: 
-    policy.mcm.ibm.com/controls: 
+    policy.open-cluster-management.io/standards: 
+    policy.open-cluster-management.io/categories: 
+    policy.open-cluster-management.io/controls: 
 spec:
-  complianceType: musthave
   remediationAction: inform
   disabled: false
-  namespaces:
-    exclude: ["kube-*"]
-    include: ["openshift-monitoring"]
-  object-templates:
-    - complianceType: musthave
-      objectDefinition:
-        apiVersion: apps/v1
-        kind: Deployment
+  policy-templates:
+    - objectDefinition:
+        apiVersion: policy.open-cluster-management.io/v1
+        kind: ConfigurationPolicy
         metadata:
-          name: cluster-monitoring-operator
+          name: policy-deployment-inform-prod
+        spec:
+          remediationAction: inform
+          severity: low
+          namespaceSelector:
+            exclude: ["kube-*"]
+            include: ["openshift-monitoring"]
+          object-templates:
+            - complianceType: musthave
+              objectDefinition:
+                kind: Deployment
+                apiVersion: apps/v1
+                metadata:
+                  name: cluster-monitoring-operator
 ---
-apiVersion: mcm.ibm.com/v1alpha1
+apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
 metadata:
   name: binding-policy-deployment-inform
@@ -34,7 +42,7 @@ placementRef:
 subjects:
 - name: policy-deployment-inform
   kind: Policy
-  apiGroup: policy.mcm.ibm.com
+  apiGroup: policy.open-cluster-management.io
 ---
 apiVersion: apps.open-cluster-management.io/v1
 kind: PlacementRule
@@ -43,7 +51,8 @@ metadata:
   namespace: policies
 spec:
   clusterConditions:
-  - type: OK
+  - status: "True"
+    type: ManagedClusterConditionAvailable
   clusterSelector:
     matchExpressions:
-      - {key: env, operator: In, values: ["pro"]}
+      - {key: environment, operator: In, values: ["prod"]}
